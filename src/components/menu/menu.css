@@ -1,0 +1,13 @@
+.biblioteca-header {
+    box-shadow: 0px 2px 6px 0 rgb(193, 192, 192);
+}
+
+.biblioteca-nav {
+    justify-content: space-between;
+}
+
+@media screen and (max-width: 991px) {
+    .biblioteca-login-btn {
+        margin: auto;
+    }
+}
