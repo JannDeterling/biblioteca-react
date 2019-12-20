@@ -1,43 +1,29 @@
 import React from 'react';
 import './App.css';
-import {Menu} from "./components/menu/Menu";
-import {BookList} from "./containers/books/BookList";
+import Menu from "./components/menu/Menu";
+import AvailableBooksContainer from "./containers/books/AvailableBooksContainer";
 import {Route, Router, Switch} from "react-router-dom";
-import {Home} from "./containers/home/Home";
-import {Login, UserInformation} from "./components/login/Login";
-import history from "./History";
-import {BookListToCheckout} from "./containers/books/BookListToCheckout";
-import {BookListToReturn} from "./containers/books/BookListToReturn";
-import {UserService} from "./services/UserService";
+import {Home} from "./components/home/Home";
+import Login from "./components/login/Login";
+import history from "./util/History";
+import BookCheckoutContainer from "./containers/books/BookCheckoutContainer";
+import BookReturnContainer from "./containers/books/BookReturnContainer";
+import {connect} from "react-redux";
 
-class App extends React.Component<any, any> {
-
-    constructor(props: any) {
-        super(props);
-        this.state = {isLoggedIn: false};
-
-        this.subscribeToLogInState = this.subscribeToLogInState.bind(this);
-        UserService.registerSubscriber(this.subscribeToLogInState);
-    }
-
-    private subscribeToLogInState(stateChange: UserInformation | undefined) {
-        if (stateChange) {
-            this.setState({isLoggedIn: stateChange.isLoggedIn});
-        }
-    }
+class AppComponent extends React.Component<any, any> {
 
     private registerCheckoutRouteWhenLoggedIn() {
-        if (this.state.isLoggedIn) {
+        if (this.props.user.isLoggedIn) {
             return (
-                    <Route path={"/checkout-book"} component={BookListToCheckout}/>
+                <Route path={"/checkout-book"} component={BookCheckoutContainer}/>
             );
         }
     }
 
     private registerReturnRouteWhenLoggedIn() {
-        if (this.state.isLoggedIn) {
+        if (this.props.user.isLoggedIn) {
             return (
-                <Route path={"/return-book"} component={BookListToReturn}/>
+                <Route path={"/return-book"} component={BookReturnContainer}/>
             );
         }
     }
@@ -50,7 +36,7 @@ class App extends React.Component<any, any> {
                     <Switch>
                         <Route path={"/"} exact component={Home}/>
                         <Route path={"/login"} exact component={Login}/>
-                        <Route path={"/books"} component={BookList}/>
+                        <Route path={"/books"} component={AvailableBooksContainer}/>
                         {this.registerCheckoutRouteWhenLoggedIn()}
                         {this.registerReturnRouteWhenLoggedIn()}
                         <Route render={() => <h1>We don't know this page</h1>}/>
@@ -61,4 +47,9 @@ class App extends React.Component<any, any> {
     }
 }
 
+const mapStateToProps = (state: any) => ({
+    user: state.user
+});
+
+const App = connect(mapStateToProps)(AppComponent);
 export default App;

@@ -1,67 +1,63 @@
-import {Observer} from "../../Observer";
-import {CheckedOut} from "../../components/book/BookToCheckout";
+import {Observer} from "../../util/Observer";
 import * as React from "react";
-import "./bookList.css";
-import {BookToReturn} from "../../components/book/BookToReturn";
-import {UserInformation} from "../../components/login/Login";
-import {UserService} from "../../services/UserService";
-import {BookInformation} from "../../components/book/Book";
+import "./books.css";
+import ReturnBookCard from "../../components/book/ReturnBookCard";
+import {connect} from "react-redux";
+import {Book} from "../../models/Book";
+import {User} from "../../models/User";
+import {CheckedOut} from "../../models/CheckedOut";
 
 export const returnObserver: Observer<CheckedOut> = new Observer<CheckedOut>(CheckedOut.NOT_CHECKED_OUT);
 
-export class BookListToReturn extends React.Component<any, { isCheckedOut: CheckedOut, user: UserInformation | any }> {
+interface ReturnContainerProps {
+    user: User;
+}
+
+interface ReturnContainerState {
+    showReturnBanner: CheckedOut;
+}
+
+class ReturnContainer extends React.Component<ReturnContainerProps, ReturnContainerState> {
 
     constructor(props: any) {
         super(props);
 
         this.state = {
-            isCheckedOut: CheckedOut.NOT_CHECKED_OUT, user: {}
+            showReturnBanner: CheckedOut.NOT_CHECKED_OUT
         };
-
-        this.subscribeToLogInState = this.subscribeToLogInState.bind(this);
         this.subscribeToReturnObserver = this.subscribeToReturnObserver.bind(this);
     }
 
     componentDidMount(): void {
-        UserService.registerSubscriber(this.subscribeToLogInState);
         returnObserver.registerSubscriber(this.subscribeToReturnObserver);
     }
 
     componentWillUnmount(): void {
-        UserService.cancelSubscription(this.subscribeToLogInState);
         returnObserver.cancelSubscription(this.subscribeToReturnObserver);
     }
 
     buildBooks() {
-        if (this.state.user.checkedOutBooks) {
-            return this.state.user.checkedOutBooks.map((book: BookInformation, index: number) => {
-                    return (<BookToReturn key={index} userId={this.state.user.id} book={book}/>)
+        if (this.props.user.checkedOutBooks) {
+            return this.props.user.checkedOutBooks.map((book: Book, index: number) => {
+                    return (<ReturnBookCard key={index} userId={this.props.user.id} book={book}/>)
                 }
             );
         }
     }
 
-    private subscribeToLogInState(stateChange: UserInformation | undefined) {
-        if (stateChange) {
-            this.setState({user: stateChange});
-        }else {
-            this.setState( {user: {}})
-        }
-    }
-
     private subscribeToReturnObserver(checkOutState: CheckedOut) {
-        this.setState({isCheckedOut: checkOutState});
+        this.setState({showReturnBanner: checkOutState});
         if (checkOutState !== CheckedOut.NOT_CHECKED_OUT) {
             setTimeout(() => returnObserver.updateState(CheckedOut.NOT_CHECKED_OUT), 1200);
         }
     }
 
     private renderCheckOutMessage() {
-        if (this.state.isCheckedOut === CheckedOut.SUCCESSFUL) {
+        if (this.state.showReturnBanner === CheckedOut.SUCCESSFUL) {
             return <div className="alert alert-success checkout-message" role="alert">
                 Returned book successfully!
             </div>;
-        } else if (this.state.isCheckedOut === CheckedOut.UNSUCCESSFUL) {
+        } else if (this.state.showReturnBanner === CheckedOut.UNSUCCESSFUL) {
             return <div className="alert alert-danger checkout-message" role="alert">
                 Something went wrong!
             </div>
@@ -81,6 +77,11 @@ export class BookListToReturn extends React.Component<any, { isCheckedOut: Check
             </div>
         );
     }
-
 }
 
+const mapStateToProps = (state: any) => ({
+    user: state.user
+});
+
+const BookReturnContainer = connect(mapStateToProps)(ReturnContainer);
+export default BookReturnContainer;

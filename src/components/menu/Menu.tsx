@@ -1,35 +1,23 @@
 import * as React from "react";
 import {NavLink} from "react-router-dom";
 import "./menu.css";
-import {UserInformation} from "../login/Login";
 import {UserService} from "../../services/UserService";
+import {connect} from "react-redux";
+import {logoutUser} from "../../state-management/actions/UserActions";
+import {User} from "../../models/User";
 
-export class Menu extends React.Component<any, {user: UserInformation} | any> {
+interface MenuProps {
+    user: User;
+    logout: (isLoggedOut: boolean) => any;
+    history: any;
+}
+
+class MenuComponent extends React.Component<MenuProps, any> {
 
     constructor(props: any) {
         super(props);
-        this.state = {};
-
         this.clickLogIn = this.clickLogIn.bind(this);
         this.clickLogOut = this.clickLogOut.bind(this);
-        this.subscribeToLogInState = this.subscribeToLogInState.bind(this);
-
-    }
-
-    componentDidMount(): void {
-        UserService.registerSubscriber(this.subscribeToLogInState);
-    }
-
-    componentWillUnmount(): void {
-        UserService.cancelSubscription(this.subscribeToLogInState);
-    }
-
-    private subscribeToLogInState(stateChange: UserInformation | undefined) {
-        if (stateChange) {
-            this.setState({user: stateChange});
-        } else {
-            this.setState({ user: {}});
-        }
     }
 
     private clickLogIn() {
@@ -37,25 +25,27 @@ export class Menu extends React.Component<any, {user: UserInformation} | any> {
     }
 
     private clickLogOut() {
-        UserService.logout(this.state.user.id);
+        UserService.logout(this.props.user.id).then( res => {
+            this.props.logout(res);
+        });
     }
 
     showCheckOutOption() {
-        if (this.state.user && this.state.user.isLoggedIn) {
+        if (this.props.user.isLoggedIn) {
             return <NavLink to={"/checkout-book"} exact={true} className="nav-item nav-link"
                             activeClassName={"active"}>Checkout</NavLink>
         }
     }
 
     showReturnOption() {
-        if (this.state.user && this.state.user.isLoggedIn) {
+        if (this.props.user.isLoggedIn) {
             return <NavLink to={"/return-book"} exact={true} className="nav-item nav-link"
                             activeClassName={"active"}>Return</NavLink>
         }
     }
 
     showCorrectUserButton() {
-        if (this.state.user && !this.state.user.isLoggedIn) {
+        if (!this.props.user.isLoggedIn) {
             return <NavLink to={"/login"} exact={true} className="btn btn-outline-success biblioteca-login-btn"
                             type="button" onClick={this.clickLogIn}>Log in</NavLink>;
         }
@@ -93,3 +83,14 @@ export class Menu extends React.Component<any, {user: UserInformation} | any> {
         );
     }
 }
+
+const mapStateToProps = (state: any) => ({
+    user: state.user
+});
+
+const mapDispatchToProps = (dispatch: any) => ({
+    logout: (isLoggedOut: boolean) => dispatch(logoutUser(isLoggedOut))
+});
+
+const Menu = connect(mapStateToProps, mapDispatchToProps)(MenuComponent);
+export default Menu;

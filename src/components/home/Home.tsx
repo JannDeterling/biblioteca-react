@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Carousel} from "../../components/carousel/Carousel";
+import {Carousel} from "../carousel/Carousel";
 import "./home.css";
 
 const library1 = require("./library-1.jpg");

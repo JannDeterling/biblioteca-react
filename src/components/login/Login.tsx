@@ -1,21 +1,16 @@
 import * as React from "react";
 import "./login.css";
-import {BookInformation} from "../book/Book";
 import {UserService} from "../../services/UserService";
+import {loginUser} from "../../state-management/actions/UserActions";
+import {connect} from "react-redux";
+import {User} from "../../models/User";
 
 interface LoginState {
     username: string;
     password: string;
 }
 
-export interface UserInformation {
-    id: number;
-    username: string;
-    isLoggedIn: boolean;
-    checkedOutBooks: BookInformation[];
-}
-
-export class Login extends React.Component<any, LoginState> {
+class LoginComponent extends React.Component<any, LoginState> {
 
     constructor(props: any) {
         super(props);
@@ -32,6 +27,7 @@ export class Login extends React.Component<any, LoginState> {
     handleLogIn(event: any) {
         event.preventDefault();
         UserService.login(this.state.username, this.state.password).then( response => {
+            this.props.loginUser(response);
             if (response) this.props.history.push("/");
         });
     }
@@ -52,14 +48,14 @@ export class Login extends React.Component<any, LoginState> {
                     <div className="form-group row">
                         <label htmlFor="username" className={"col-sm-2 col-form-label"}>Username</label>
                         <div className="col-sm-10">
-                            <input id="username" type="text" value={this.state.username}
+                            <input id="username" type="text" autoComplete="username" value={this.state.username}
                                    onChange={this.handleUsernameChange} className="form-control"/>
                         </div>
                     </div>
                     <div className="form-group row">
                         <label htmlFor="password" className={"col-sm-2 col-form-label"}>Password</label>
                         <div className="col-sm-10">
-                            <input id="password" type="password" value={this.state.password}
+                            <input id="password" type="password" autoComplete="current-password" value={this.state.password}
                                    onChange={this.handlePasswordChange} className="form-control"/>
                         </div>
                     </div>
@@ -69,3 +65,10 @@ export class Login extends React.Component<any, LoginState> {
         );
     }
 }
+
+const mapDispatchToProps = (dispatch: any) => ({
+    loginUser: (user: User) => dispatch(loginUser(user))
+});
+
+const Login = connect(null, mapDispatchToProps)(LoginComponent);
+export default Login;
